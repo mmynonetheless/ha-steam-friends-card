@@ -1,7 +1,7 @@
 /**
  * Steam Friends Card for Home Assistant
- * Ultra-optimized version with minimal overhead
- * Version 1.2.2
+ * Ultra-optimized with whitelist filtering
+ * Version 1.3.0
  */
 
 const C = {
@@ -18,7 +18,9 @@ class SteamFriendsCard extends HTMLElement {
       compact_mode: true,
       custom_names: {},
       show_last_seen: true,
-      title: 'Steam Friends'
+      title: 'Steam Friends',
+      include_friends: [], // Now a whitelist - ONLY these friends show
+      exclude_friends: []  // Blacklist - removes from whitelist if needed
     };
   }
 
@@ -59,25 +61,66 @@ class SteamFriendsCard extends HTMLElement {
   _process(friends) {
     let f = friends.filter(f => f?.steamid);
     
-    // Apply custom names (single pass)
+    // Apply custom names first (for filtering by custom names)
     const cn = this._.c.custom_names;
-    if (cn) f = f.map(f => cn[f.steamid] ? { ...f, personaname: cn[f.steamid] } : f);
-    
-    // Apply filters
-    const { inc = [], exc = [] } = this._.c;
-    if (inc.length || exc.length) {
-      f = f.filter(f => {
-        const n = f.personaname || '';
-        const incOk = !inc.length || inc.some(i => this._match(f, i, n));
-        const excOk = !exc.length || !exc.some(e => this._match(f, e, n));
-        return incOk && excOk;
+    if (cn) {
+      f = f.map(f => {
+        if (cn[f.steamid]) {
+          return { ...f, personaname: cn[f.steamid] };
+        }
+        return f;
       });
     }
     
-    // Online only
-    if (this._.c.online_only) f = f.filter(f => f.personastate !== 0);
+    // WHITELIST FILTER: If include_friends exists, ONLY show those friends
+    const { include_friends = [], exclude_friends = [] } = this._.c;
     
-    // Sort by status (single pass)
+    if (include_friends.length > 0) {
+      // Create a Set for O(1) lookup performance
+      const includeSet = new Set(include_friends.map(i => String(i).toLowerCase()));
+      
+      f = f.filter(friend => {
+        const name = (friend.personaname || '').toLowerCase();
+        const id = friend.steamid;
+        
+        // Check if friend matches ANY include criteria
+        const isIncluded = [...includeSet].some(filter => {
+          // Exact Steam ID match
+          if (id === filter) return true;
+          // Name contains filter (case-insensitive)
+          if (name.includes(filter)) return true;
+          return false;
+        });
+        
+        return isIncluded;
+      });
+    }
+    
+    // Apply exclude filters (removes from whitelist results)
+    if (exclude_friends.length > 0 && f.length > 0) {
+      const excludeSet = new Set(exclude_friends.map(e => String(e).toLowerCase()));
+      
+      f = f.filter(friend => {
+        const name = (friend.personaname || '').toLowerCase();
+        const id = friend.steamid;
+        
+        // Check if friend matches ANY exclude criteria
+        const isExcluded = [...excludeSet].some(filter => {
+          if (id === filter) return true;
+          if (name.includes(filter)) return true;
+          return false;
+        });
+        
+        return !isExcluded;
+      });
+    }
+    
+    // Online only filter
+    if (this._.c.online_only) {
+      f = f.filter(f => f.personastate !== 0);
+    }
+    
+    // Sort by status (playing > online > offline)
     this._.f = f.sort((a, b) => {
       const pa = a.gameextrainfo ? 3 : a.personastate === 1 ? 2 : a.personastate === 2 ? 1 : 0;
       const pb = b.gameextrainfo ? 3 : b.personastate === 1 ? 2 : b.personastate === 2 ? 1 : 0;
@@ -85,13 +128,6 @@ class SteamFriendsCard extends HTMLElement {
     });
     
     this._render();
-  }
-
-  _match(f, filter, name) {
-    filter = String(filter).toLowerCase();
-    return f.steamid === filter || 
-           f.personaname?.toLowerCase().includes(filter) || 
-           name.toLowerCase().includes(filter);
   }
 
   _ls(t) {
@@ -110,7 +146,11 @@ class SteamFriendsCard extends HTMLElement {
     
     if (l) return this.shadowRoot.innerHTML = S.loading;
     if (e) return this.shadowRoot.innerHTML = S.error(e, c.entity);
-    if (!f.length) return this.shadowRoot.innerHTML = S.empty;
+    if (!f.length) {
+      // Show different message if filters are active vs no friends at all
+      const hasFilters = c.include_friends?.length > 0 || c.exclude_friends?.length > 0;
+      return this.shadowRoot.innerHTML = hasFilters ? S.noMatches : S.empty;
+    }
     
     const groups = { p: [], o: [], f: [] };
     f.forEach(f => f.gameextrainfo ? groups.p.push(f) : f.personastate > 0 ? groups.o.push(f) : groups.f.push(f));
@@ -118,7 +158,7 @@ class SteamFriendsCard extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <style>${S.style(c.compact_mode)}</style>
       <div class="c">
-        ${S.header(c.title, c.inc?.length || c.exc?.length)}
+        ${S.header(c.title, c.include_friends?.length || c.exclude_friends?.length)}
         ${S.stats(groups)}
         <div class="g">${S.friends(groups, c)}</div>
       </div>
@@ -149,7 +189,7 @@ const S = {
     .fi:hover{transform:translateY(-2px);box-shadow:0 4px 8px #0000001a;background:var(--primary-color,#03a9f4);color:#fff}
     .fi:hover .fg,.fi:hover .fs,.fi:hover .fl{color:#fffe}
     .a{width:36px;height:36px;border-radius:50%;margin-right:12px;border:2px solid #fff3;flex-shrink:0;background:var(--divider,#e0e0e0);object-fit:cover}
-    .fi{flex:1;min-width:0}
+    .f-info{flex:1;min-width:0}
     .fn{font-weight:600;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .fg{display:flex;align-items:center;gap:4px;font-size:.8rem;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .fs{font-size:.75rem;opacity:.7}
@@ -162,13 +202,16 @@ const S = {
     .sp{width:40px;height:40px;margin:0 auto 12px;border:3px solid var(--divider,#e0e0e0);border-top-color:var(--primary-color,#03a9f4);border-radius:50%;animation:s 1s linear infinite}
     @keyframes s{to{transform:rotate(360deg)}}
     .er{color:#f44336;background:#f443361a;border-radius:8px}
+    .nm{color:#ff9800;background:#ff98001a;border-radius:8px;padding:20px;text-align:center}
   `,
   
   loading: `<style>:host{display:block;padding:16px}</style><div class="ld"><div class="sp"></div>Loading...</div>`,
   
   error: (msg, entity) => `<style>:host{display:block;padding:16px}</style><div class="er">⚠️ ${msg}<div style="font-size:.9rem;margin-top:8px;">Check <strong>${entity}</strong></div></div>`,
   
-  empty: `<style>:host{display:block;padding:16px}</style><div class="er">No friends match filters</div>`,
+  empty: `<style>:host{display:block;padding:16px}</style><div class="er">No friends found</div>`,
+  
+  noMatches: `<style>:host{display:block;padding:16px}</style><div class="nm">No friends match your filter criteria</div>`,
   
   header: (title, filtered) => `
     <div class="h">
