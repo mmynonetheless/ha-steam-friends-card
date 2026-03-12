@@ -289,31 +289,43 @@ class SteamFriendsCard extends HTMLElement {
     }).join('');
   }
 
-  _renderFriendItem(friend, status) {
-    const statusClass = status === 'playing' ? 'status-playing' : 
-                        status === 'online' ? 'status-online' : 'status-offline';
-    
-    return `
-      <div class="friend-item">
-        <img class="avatar" 
-             src="${friend.avatar || 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/fe/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb.jpg'}" 
-             alt="" 
-             onerror="this.src='https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/fe/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb.jpg'">
-        <div class="friend-info">
-          <div class="friend-name">${friend.personaname || 'Unknown'}</div>
-          ${friend.gameextrainfo ? 
-            `<div class="friend-game">
-              <span>🎮 ${friend.gameextrainfo}</span>
-            </div>` : 
-            status === 'offline' && this._config.show_last_seen && friend.lastlogoff ?
-              `<div class="last-seen">Last seen ${this._formatLastSeen(friend.lastlogoff)}</div>` :
-              `<div class="friend-status">${this._getStatusText(friend.personastate)}</div>`
-          }
-        </div>
-        <div class="status-indicator ${statusClass}"></div>
+_renderFriendItem(friend, status) {
+  const statusClass = status === 'playing' ? 'status-playing' : 
+                      status === 'online' ? 'status-online' : 'status-offline';
+  
+  // Determine if we should show game background
+  const showGameBg = this._config.game_background && 
+                     status === 'playing' && 
+                     friend.gameid;
+  
+  const gameBgStyle = showGameBg ? 
+    `background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
+                      url('https://steamcdn-a.akamaihd.net/steam/apps/${friend.gameid}/header.jpg');
+     background-size: cover;
+     background-position: center;
+     color: white;` : '';
+  
+  return `
+    <div class="friend-item" style="${gameBgStyle}">
+      <img class="avatar" 
+           src="${friend.avatar || 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/fe/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb.jpg'}" 
+           alt="" 
+           onerror="this.src='https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/fe/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb.jpg'">
+      <div class="friend-info">
+        <div class="friend-name">${friend.personaname || 'Unknown'}</div>
+        ${friend.gameextrainfo ? 
+          `<div class="friend-game">
+            <span>🎮 ${friend.gameextrainfo}</span>
+          </div>` : 
+          status === 'offline' && this._config.show_last_seen && friend.lastlogoff ?
+            `<div class="last-seen">Last seen ${this._formatLastSeen(friend.lastlogoff)}</div>` :
+            `<div class="friend-status">${this._getStatusText(friend.personastate)}</div>`
+        }
       </div>
-    `;
-  }
+      <div class="status-indicator ${statusClass}"></div>
+    </div>
+  `;
+}
 
   _showError(message) {
     if (!this.shadowRoot) return;
