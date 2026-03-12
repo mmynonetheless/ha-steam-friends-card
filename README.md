@@ -35,8 +35,8 @@ Category: **"Lovelace"**
 1. Download `steam-friends-card.js` from the latest release
 2. Place it in your `/config/www/` directory
 3. Add to your Lovelace resources:
-  - url: /local/steam-friends-card.js
-  - type: module
+  url: /local/steam-friends-card.js
+  type: module
 
 
 ## ⚙️ Configuration
@@ -65,12 +65,12 @@ custom_names:
     "76561197960287930": "Best Friend"
     "76561197960497428": "Gaming Buddy"
 include_friends:
-  - "76561197960287930"
-  - "Gaming Buddy"
-  - "John"
+  &hyphen;"76561197960287930"
+  &hyphen; "Gaming Buddy"
+  &hyphen; "Jennifer"
 exclude_friends:
-  - "Spammer"
-  - "76561197960642784"
+  &hyphen; "Spammer"
+  &hyphen; "76561197960642784"
 
 ## Filtering System
 
@@ -81,9 +81,9 @@ When you specify include_friends, it acts as a strict whitelist. ONLY friends ma
 
 # This will show ONLY these three friends
 include_friends:
-  - "76561197960287930"           # By Steam ID
-  - "John"                         # By name (case-insensitive)
-  - "Gaming Buddy"                  # By custom name (if set)
+  &hyphen; "76561197960287930"           # By Steam ID
+  &hyphen; "Jennifer"                         # By name (case-insensitive)
+  &hyphen; "Gaming Buddy"                  # By custom name (if set)
 
 
 ### exclude_friends - The Blacklist
@@ -92,13 +92,13 @@ The blacklist removes specific friends from the whitelist results. Useful for fi
 
 
 include_friends:
-  - "76561197960287930"
-  - "76561197960497428"
-  - "76561197960642784"
+  &hyphen; "76561197960287930"
+  &hyphen; "76561197960497428"
+  &hyphen; "76561197960642784"
 
 exclude_friends:
-  - "76561197960497428"            # Remove this specific friend
-  - "Annoying Person"                # Remove anyone with this in their name
+  &hyphen; "76561197960497428"            # Remove this specific friend
+  &hyphen; "Annoying Person"                # Remove anyone with this in their name
 
 
 ### Filter Priority
@@ -139,32 +139,22 @@ custom_names:
   "76561197960287930": "GamerDad"
   "76561197960497428": "NoobSlayer"
 include_friends:
-  - "GamerDad"
-  - "NoobSlayer"
-  - "76561197960642784"
+  &hyphen; "GamerDad"
+  &hyphen; "NoobSlayer"
+  &hyphen; "76561197960642784"
 
 ### Family & Close Friends
 
 type: custom:steam-friends-card
-
-entity: sensor.steam_friends
-
+entity: sensor.steam_friend
 title: "Family & Close Friends"
-
 include_friends:
-
-  - "76561197960287930"
-
-  - "76561197960497428"
-  - 
-  - "76561197960642784"
-
+  &hyphen; "76561197960287930"
+  &hyphen; "76561197960497428"
+  &hyphen; "76561197960642784"
 custom_names:
-
-  "76561197960287930": "Dad"
-  
-  "76561197960497428": "Brother"
-  
+  "76561197960287930": "Big Sister"
+  "76561197960497428": "Baby Brother"
   "76561197960642784": "Cousin"
 
 
@@ -226,13 +216,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Contact
 
 - GitHub: @mmynonetheless
-- Issues: Open an issue on GitHub
 
----
-
-*Now with automatic theme adaptation! Your card will always look perfect, no matter what theme you choose.*
 
 ## Remember: After Installation or Theme Changes
 
 Hard refresh your browser! (Ctrl+F5 or Cmd+Shift+R)
-```
