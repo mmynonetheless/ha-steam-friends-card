@@ -1,12 +1,7 @@
 # 🎮 Steam Friends Card for Home Assistant
 
-[![HACS Custom][hacs-shield]][hacs]
-[![GitHub Release][releases-shield]][releases]
-[![License][license-shield]](LICENSE)
 
-A **blazing fast** custom Lovelace card that displays your Steam friends list using a **single sensor**. Built for performance and simplicity.
-
-![Steam Friends Card Preview](https://via.placeholder.com/800x400?text=Steam+Friends+Card+Preview)
+A fast custom Lovelace card that displays your Steam friends list using a **single sensor**. Built for performance and simplicity.
 
 ## ✨ Features
 
@@ -16,7 +11,7 @@ A **blazing fast** custom Lovelace card that displays your Steam friends list us
 - 🏷️ **Custom Names** - Rename friends with friendly nicknames
 - ⏰ **Last Seen** - Shows when offline friends were last online
 - 📱 **Compact Mode** - Two-column layout for efficient space use
-- 🎯 **Friend Filtering** - Show or hide specific friends with powerful filtering
+- 🎯 **Powerful Whitelist Filtering** - Show EXACTLY the friends you want, hide the rest
 - 🔄 **Auto-Refresh** - Updates automatically with your sensor data
 - 🎨 **Clean Design** - Modern UI with smooth hover effects
 
