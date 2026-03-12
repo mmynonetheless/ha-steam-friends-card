@@ -14,25 +14,7 @@ A fast custom Lovelace card that displays your Steam friends list using a **sing
 - 🎯 **Powerful Whitelist Filtering** - Show EXACTLY the friends you want, hide the rest
 - 🔄 **Auto-Refresh** - Updates automatically with your sensor data
 - 🖱️ **Hover Effects** - Elegant animations that respect your theme
-
-## 🎨 **Theme Integration**
-
-The card automatically uses your Home Assistant themes:
-
-| Element | Theme Variable | Fallback |
-|---------|----------------|----------|
-| Card Background | `--ha-card-background` | White |
-| Primary Text | `--primary-text-color` | Black |
-| Secondary Text | `--secondary-text-color` | Gray |
-| Accent Color | `--primary-color` | Blue |
-| Online Indicator | `--state-icon-color` | Green |
-| Playing Indicator | `--state-icon-active-color` | Orange |
-| Offline Indicator | `--disabled-text-color` | Gray |
-| Dividers | `--divider-color` | Light Gray |
-| Error Messages | `--error-color` | Red |
-| Warnings | `--warning-color` | Orange |
-
-This means the card will look perfect in **light mode, dark mode, or any custom theme** without any additional configuration!
+- 🎨 **Theme Integration** - The card automatically uses your Home Assistant themes
 
 ## 📦 Installation
 
@@ -43,7 +25,6 @@ This means the card will look perfect in **light mode, dark mode, or any custom 
 3. Click the three dots → **"Custom repositories"**
 4. Add this repository: https://github.com/mmynonetheless/ha-steam-friends-card
 
-text
 Category: **"Lovelace"**
 5. Click **"Explore & Download Repositories"**
 6. Search for **"Steam Friends Card"** and download
@@ -55,7 +36,7 @@ Category: **"Lovelace"**
 2. Place it in your `/config/www/` directory
 3. Add to your Lovelace resources:
   - url: /local/steam-friends-card.js
-    type: module
+  - type: module
 
 
 ## ⚙️ Configuration
@@ -68,6 +49,7 @@ You need the [Steam Friends Integration](https://github.com/mmynonetheless/ha-st
 
 
 type: custom:steam-friends-card
+
 entity: sensor.steam_friends
 
 
