@@ -53,7 +53,7 @@ entity: sensor.steam_friends
 
 
 ### Full Configuration Example
-
+```
 type: custom:steam-friends-card
 entity: sensor.steam_friends
 title: "My Gaming Squad"
@@ -65,13 +65,13 @@ custom_names:
     "76561197960287930": "Best Friend"
     "76561197960497428": "Gaming Buddy"
 include_friends:
-  &hyphen;"76561197960287930"
-  &hyphen; "Gaming Buddy"
-  &hyphen; "Jennifer"
+  - "76561197960287930"
+  - "Gaming Buddy"
+  - "Jennifer"
 exclude_friends:
-  &hyphen; "Spammer"
-  &hyphen; "76561197960642784"
-
+  - "Spammer"
+  - "76561197960642784"
+```
 ## Filtering System
 
 ### include_friends - The Whitelist
@@ -80,26 +80,25 @@ When you specify include_friends, it acts as a strict whitelist. ONLY friends ma
 
 
 # This will show ONLY these three friends
+```
 include_friends:
-  &hyphen; "76561197960287930"           # By Steam ID
-  &hyphen; "Jennifer"                         # By name (case-insensitive)
-  &hyphen; "Gaming Buddy"                  # By custom name (if set)
-
+  - "76561197960287930"           # By Steam ID
+  - "Jennifer"                    # By name (case-insensitive)
+  - "Gaming Buddy"                # By custom name (if set)
+```
 
 ### exclude_friends - The Blacklist
 
 The blacklist removes specific friends from the whitelist results. Useful for fine-tuning.
-
-
+```
 include_friends:
-  &hyphen; "76561197960287930"
-  &hyphen; "76561197960497428"
-  &hyphen; "76561197960642784"
-
+  - "76561197960287930"
+  - "76561197960497428"
+  - "76561197960642784"
 exclude_friends:
-  &hyphen; "76561197960497428"            # Remove this specific friend
-  &hyphen; "Annoying Person"                # Remove anyone with this in their name
-
+  - "76561197960497428"            # Remove this specific friend
+  - "Annoying Person"              # Remove anyone with this in their name
+```
 
 ### Filter Priority
 
@@ -119,16 +118,16 @@ exclude_friends:
 ## Example Configurations
 
 ### Simple Online-Only View
-
+```
 type: custom:steam-friends-card
 entity: sensor.steam_friends
 title: "Who's Online?"
 online_only: true
 compact_mode: true
-
+```
 
 ### Full Featured with Custom Names
-
+```
 type: custom:steam-friends-card
 entity: sensor.steam_friends
 title: "Gaming Squad"
@@ -139,24 +138,24 @@ custom_names:
   "76561197960287930": "GamerDad"
   "76561197960497428": "NoobSlayer"
 include_friends:
-  &hyphen; "GamerDad"
-  &hyphen; "NoobSlayer"
-  &hyphen; "76561197960642784"
-
+  - "GamerDad"
+  - "NoobSlayer"
+  - "76561197960642784"
+```
 ### Family & Close Friends
-
+```
 type: custom:steam-friends-card
 entity: sensor.steam_friend
 title: "Family & Close Friends"
 include_friends:
-  &hyphen; "76561197960287930"
-  &hyphen; "76561197960497428"
-  &hyphen; "76561197960642784"
+  - "76561197960287930"
+  - "76561197960497428"
+  - "76561197960642784"
 custom_names:
   "76561197960287930": "Big Sister"
   "76561197960497428": "Baby Brother"
   "76561197960642784": "Cousin"
-
+```
 
 ## Theme Integration
 
