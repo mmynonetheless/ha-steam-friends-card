@@ -49,32 +49,21 @@ You need the [Steam Friends Integration](https://github.com/mmynonetheless/ha-st
 
 
 type: custom:steam-friends-card
-
 entity: sensor.steam_friends
 
 
 ### Full Configuration Example
 
 type: custom:steam-friends-card
-
 entity: sensor.steam_friends
-
 title: "My Gaming Squad"
-
 group_by_status: true
-
 compact_mode: true
-
 online_only: false
-
 show_last_seen: true
-
 custom_names:
-  
-  - "76561197960287930": "Best Friend"
-
-  - "76561197960497428": "Gaming Buddy"
-
+    "76561197960287930": "Best Friend"
+    "76561197960497428": "Gaming Buddy"
 include_friends:
   - "76561197960287930"
   - "Gaming Buddy"
@@ -132,26 +121,41 @@ exclude_friends:
 ### Simple Online-Only View
 
 type: custom:steam-friends-card
+
 entity: sensor.steam_friends
+
 title: "Who's Online?"
+
 online_only: true
+
 compact_mode: true
 
 
 ### Full Featured with Custom Names
 
 type: custom:steam-friends-card
+
 entity: sensor.steam_friends
+
 title: "Gaming Squad"
+
 group_by_status: true
+
 compact_mode: true
+
 show_last_seen: true
+
 custom_names:
   "76561197960287930": "GamerDad"
+
   "76561197960497428": "NoobSlayer"
+
 include_friends:
+
   - "GamerDad"
+  
   - "NoobSlayer"
+  
   - "76561197960642784"
 
 
