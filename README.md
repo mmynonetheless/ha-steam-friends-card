@@ -121,57 +121,52 @@ exclude_friends:
 ### Simple Online-Only View
 
 type: custom:steam-friends-card
-
 entity: sensor.steam_friends
-
 title: "Who's Online?"
-
 online_only: true
-
 compact_mode: true
 
 
 ### Full Featured with Custom Names
 
 type: custom:steam-friends-card
-
 entity: sensor.steam_friends
-
 title: "Gaming Squad"
-
 group_by_status: true
-
 compact_mode: true
-
 show_last_seen: true
-
 custom_names:
   "76561197960287930": "GamerDad"
-
   "76561197960497428": "NoobSlayer"
-
 include_friends:
-
   - "GamerDad"
-  
   - "NoobSlayer"
-  
   - "76561197960642784"
-
 
 ### Family & Close Friends
 
 type: custom:steam-friends-card
+
 entity: sensor.steam_friends
+
 title: "Family & Close Friends"
+
 include_friends:
+
   - "76561197960287930"
+
   - "76561197960497428"
+  - 
   - "76561197960642784"
+
 custom_names:
+
   "76561197960287930": "Dad"
+  
   "76561197960497428": "Brother"
+  
   "76561197960642784": "Cousin"
+
 
 ## Theme Integration
 
