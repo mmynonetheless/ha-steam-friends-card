@@ -194,11 +194,10 @@ custom_names:
   "76561197960287930": "Dad"
   "76561197960497428": "Brother"
   "76561197960642784": "Cousin"
-```
 
 ## Theme Integration
 
-The card automatically uses your Home Assistant theme's:
+The card automatically uses your Home Assistant themes:
 
 | Element | Theme Variable |
 |---------|----------------|
