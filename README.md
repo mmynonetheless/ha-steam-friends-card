@@ -56,15 +56,25 @@ entity: sensor.steam_friends
 ### Full Configuration Example
 
 type: custom:steam-friends-card
+
 entity: sensor.steam_friends
+
 title: "My Gaming Squad"
+
 group_by_status: true
+
 compact_mode: true
+
 online_only: false
+
 show_last_seen: true
+
 custom_names:
-  "76561197960287930": "Best Friend"
-  "76561197960497428": "Gaming Buddy"
+  
+  - "76561197960287930": "Best Friend"
+
+  - "76561197960497428": "Gaming Buddy"
+
 include_friends:
   - "76561197960287930"
   - "Gaming Buddy"
