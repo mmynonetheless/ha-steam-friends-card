@@ -2,7 +2,7 @@
  * Steam Friends Card for Home Assistant
  * Combines best features of kb-steam-card and steam-card-compact
  * Designed to work with sensor.steam_friends integration
- * Version 1.0.0
+ * Version 1.0.1
  */
 
 class SteamFriendsCard extends HTMLElement {
@@ -11,6 +11,7 @@ class SteamFriendsCard extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this._friends = [];
     this._config = {};
+    this._loading = true;
   }
 
   static getStubConfig() {
@@ -36,28 +37,34 @@ class SteamFriendsCard extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
+    this._loading = false;
     const entityState = hass.states[this._config.entity];
     
     if (entityState && entityState.attributes && entityState.attributes.friends) {
       this._friends = entityState.attributes.friends;
       this._processFriends();
+    } else if (entityState) {
+      this._showError('No friend data available. Make sure your steam_friends integration has data.');
     } else {
-      this._showError('No friend data available. Make sure your steam_friends integration is working.');
+      this._showError(`Entity "${this._config.entity}" not found. Make sure your steam_friends integration is installed and configured.`);
     }
   }
 
   _processFriends() {
-    // Apply custom names
-    if (this._config.custom_names) {
-      this._friends = this._friends.map(friend => ({
-        ...friend,
-        personaname: this._config.custom_names[friend.steamid] || friend.personaname
-      }));
+    // Apply custom names with safety check
+    if (this._config.custom_names && this._friends.length) {
+      this._friends = this._friends.map(friend => {
+        if (!friend || !friend.steamid) return friend;
+        return {
+          ...friend,
+          personaname: this._config.custom_names[friend.steamid] || friend.personaname || 'Unknown'
+        };
+      }).filter(friend => friend && friend.steamid); // Remove any invalid entries
     }
 
     // Filter online only if configured
     if (this._config.online_only) {
-      this._friends = this._friends.filter(f => f.personastate !== 0);
+      this._friends = this._friends.filter(f => f && f.personastate !== 0);
     }
 
     // Sort by status (playing > online > offline)
@@ -71,6 +78,7 @@ class SteamFriendsCard extends HTMLElement {
   }
 
   _getStatusPriority(friend) {
+    if (!friend) return 0;
     if (friend.gameextrainfo) return 3;
     if (friend.personastate === 1) return 2;
     if (friend.personastate === 2) return 1;
@@ -81,11 +89,16 @@ class SteamFriendsCard extends HTMLElement {
     if (!timestamp) return '';
     const lastSeen = new Date(timestamp * 1000);
     const now = new Date();
-    const diffHours = Math.floor((now - lastSeen) / (1000 * 60 * 60));
+    const diffMs = now - lastSeen;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     
-    if (diffHours < 1) return 'Just now';
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
-    return `${Math.floor(diffHours / 24)}d ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return lastSeen.toLocaleDateString();
   }
 
   _getStatusText(state) {
@@ -107,11 +120,53 @@ class SteamFriendsCard extends HTMLElement {
     const config = this._config;
     const grouped = { playing: [], online: [], offline: [] };
 
-    this._friends.forEach(friend => {
-      if (friend.gameextrainfo) grouped.playing.push(friend);
-      else if (friend.personastate > 0) grouped.online.push(friend);
-      else grouped.offline.push(friend);
-    });
+    // Only process if we have friends
+    if (this._friends && this._friends.length) {
+      this._friends.forEach(friend => {
+        if (!friend) return;
+        if (friend.gameextrainfo) grouped.playing.push(friend);
+        else if (friend.personastate > 0) grouped.online.push(friend);
+        else grouped.offline.push(friend);
+      });
+    }
+
+    // Show loading state if no data yet
+    if (this._loading) {
+      this.shadowRoot.innerHTML = `
+        <style>
+          :host {
+            display: block;
+            padding: 16px;
+            background: var(--card-background-color, var(--ha-card-background, white));
+            border-radius: var(--ha-card-border-radius, 12px);
+            box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0,0,0,0.1));
+            font-family: var(--primary-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+          }
+          .loading {
+            text-align: center;
+            color: var(--secondary-text-color);
+            padding: 20px;
+          }
+          .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 12px;
+            border: 3px solid var(--divider-color, #e0e0e0);
+            border-top-color: var(--primary-color, #03a9f4);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          }
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        </style>
+        <div class="loading">
+          <div class="spinner"></div>
+          Loading Steam friends...
+        </div>
+      `;
+      return;
+    }
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -141,10 +196,6 @@ class SteamFriendsCard extends HTMLElement {
           grid-template-columns: ${config.compact_mode ? '1fr 1fr' : '1fr'};
           gap: 8px;
         }
-        .group {
-          margin-bottom: 16px;
-          grid-column: 1 / -1;
-        }
         .group-title {
           font-size: 0.9rem;
           font-weight: 500;
@@ -163,11 +214,6 @@ class SteamFriendsCard extends HTMLElement {
           transition: all 0.2s ease;
           position: relative;
           overflow: hidden;
-          ${config.game_background && grouped.playing.includes(friend) && friend.gameextrainfo ? 
-            `background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://steamcdn-a.akamaihd.net/steam/apps/${friend.gameid}/header.jpg');
-             background-size: cover;
-             background-position: center;
-             color: white;` : ''}
         }
         .friend-item:hover {
           transform: translateY(-2px);
@@ -179,6 +225,8 @@ class SteamFriendsCard extends HTMLElement {
           border-radius: 50%;
           margin-right: 12px;
           border: 2px solid rgba(255,255,255,0.2);
+          flex-shrink: 0;
+          background: var(--divider-color, #e0e0e0);
         }
         .friend-info {
           flex: 1;
@@ -200,10 +248,6 @@ class SteamFriendsCard extends HTMLElement {
           display: flex;
           align-items: center;
           gap: 4px;
-        }
-        .friend-game-icon {
-          width: 14px;
-          height: 14px;
         }
         .friend-status {
           font-size: 0.75rem;
@@ -235,6 +279,27 @@ class SteamFriendsCard extends HTMLElement {
           color: #f44336;
           padding: 16px;
           text-align: center;
+          background: rgba(244, 67, 54, 0.1);
+          border-radius: 8px;
+          margin: 8px 0;
+        }
+        .stats {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 12px;
+          font-size: 0.8rem;
+          color: var(--secondary-text-color);
+          flex-wrap: wrap;
+        }
+        .stat-item {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .stat-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
         }
       </style>
       
@@ -245,7 +310,24 @@ class SteamFriendsCard extends HTMLElement {
         ${config.title || 'Steam Friends'}
       </div>
 
-      ${this._friends.length === 0 ? 
+      ${this._friends && this._friends.length > 0 ? `
+        <div class="stats">
+          <div class="stat-item">
+            <span class="stat-dot status-playing"></span>
+            <span>${grouped.playing.length} Playing</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-dot status-online"></span>
+            <span>${grouped.online.length} Online</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-dot status-offline"></span>
+            <span>${grouped.offline.length} Offline</span>
+          </div>
+        </div>
+      ` : ''}
+
+      ${!this._friends || this._friends.length === 0 ? 
         '<div class="error">No friends found or data unavailable</div>' :
         `<div class="friends-grid">
           ${config.group_by_status ? this._renderGrouped(grouped) : this._renderFlat()}
@@ -289,62 +371,95 @@ class SteamFriendsCard extends HTMLElement {
     }).join('');
   }
 
-_renderFriendItem(friend, status) {
-  const statusClass = status === 'playing' ? 'status-playing' : 
-                      status === 'online' ? 'status-online' : 'status-offline';
-  
-  // Determine if we should show game background
-  const showGameBg = this._config.game_background && 
-                     status === 'playing' && 
-                     friend.gameid;
-  
-  const gameBgStyle = showGameBg ? 
-    `background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
-                      url('https://steamcdn-a.akamaihd.net/steam/apps/${friend.gameid}/header.jpg');
-     background-size: cover;
-     background-position: center;
-     color: white;` : '';
-  
-  return `
-    <div class="friend-item" style="${gameBgStyle}">
-      <img class="avatar" 
-           src="${friend.avatar || 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/fe/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb.jpg'}" 
-           alt="" 
-           onerror="this.src='https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/fe/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb.jpg'">
-      <div class="friend-info">
-        <div class="friend-name">${friend.personaname || 'Unknown'}</div>
-        ${friend.gameextrainfo ? 
-          `<div class="friend-game">
-            <span>🎮 ${friend.gameextrainfo}</span>
-          </div>` : 
-          status === 'offline' && this._config.show_last_seen && friend.lastlogoff ?
-            `<div class="last-seen">Last seen ${this._formatLastSeen(friend.lastlogoff)}</div>` :
-            `<div class="friend-status">${this._getStatusText(friend.personastate)}</div>`
-        }
+  _renderFriendItem(friend, status) {
+    if (!friend || !friend.steamid) return '';
+    
+    const statusClass = status === 'playing' ? 'status-playing' : 
+                        status === 'online' ? 'status-online' : 'status-offline';
+    
+    // Determine if we should show game background (with safety check for gameid)
+    const showGameBg = this._config.game_background && 
+                       status === 'playing' && 
+                       friend.gameid && 
+                       friend.gameid.toString().match(/^\d+$/); // Ensure it's a valid numeric ID
+    
+    const gameBgStyle = showGameBg ? 
+      `background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), 
+                        url('https://steamcdn-a.akamaihd.net/steam/apps/${friend.gameid}/header.jpg');
+       background-size: cover;
+       background-position: center;
+       color: white;` : '';
+    
+    // Fallback avatar if none provided
+    const avatarUrl = friend.avatar || 
+                     'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/fe/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb.jpg';
+    
+    return `
+      <div class="friend-item" style="${gameBgStyle}">
+        <img class="avatar" 
+             src="${avatarUrl}" 
+             alt="${friend.personaname || 'Friend'}'s avatar" 
+             loading="lazy"
+             onerror="this.src='https://steamcdn-a.akamaihd.net/steamcommunity/public/images/avatars/fe/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb.jpg'">
+        <div class="friend-info">
+          <div class="friend-name">${friend.personaname || 'Unknown'}</div>
+          ${friend.gameextrainfo ? 
+            `<div class="friend-game">
+              <span>🎮 ${friend.gameextrainfo}</span>
+            </div>` : 
+            status === 'offline' && this._config.show_last_seen && friend.lastlogoff ?
+              `<div class="last-seen">Last seen ${this._formatLastSeen(friend.lastlogoff)}</div>` :
+              `<div class="friend-status">${this._getStatusText(friend.personastate)}</div>`
+          }
+        </div>
+        <div class="status-indicator ${statusClass}"></div>
       </div>
-      <div class="status-indicator ${statusClass}"></div>
-    </div>
-  `;
-}
+    `;
+  }
 
   _showError(message) {
     if (!this.shadowRoot) return;
+    this._loading = false;
     this.shadowRoot.innerHTML = `
       <style>
+        :host {
+          display: block;
+          padding: 16px;
+          background: var(--card-background-color, var(--ha-card-background, white));
+          border-radius: var(--ha-card-border-radius, 12px);
+          box-shadow: var(--ha-card-box-shadow, 0 2px 4px rgba(0,0,0,0.1));
+          font-family: var(--primary-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+        }
         .error {
           color: #f44336;
-          padding: 16px;
+          padding: 20px;
           text-align: center;
-          background: var(--card-background-color, white);
-          border-radius: var(--ha-card-border-radius, 12px);
+          background: rgba(244, 67, 54, 0.1);
+          border-radius: 8px;
+          margin: 8px 0;
+        }
+        .error-title {
+          font-weight: bold;
+          margin-bottom: 8px;
+        }
+        .error-hint {
+          font-size: 0.9rem;
+          color: var(--secondary-text-color);
+          margin-top: 12px;
         }
       </style>
-      <div class="error">⚠️ ${message}</div>
+      <div class="error">
+        <div class="error-title">⚠️ Steam Friends Card Error</div>
+        <div>${message}</div>
+        <div class="error-hint">
+          Make sure your <strong>${this._config.entity}</strong> sensor exists and has friend data.
+        </div>
+      </div>
     `;
   }
 
   getCardSize() {
-    return Math.ceil((this._friends?.length || 0) / 2) + 1;
+    return Math.ceil((this._friends?.length || 0) / 2) + 2;
   }
 }
 
