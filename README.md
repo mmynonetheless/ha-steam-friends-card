@@ -1,6 +1,5 @@
 # 🎮 Steam Friends Card for Home Assistant
 
-
 A fast custom Lovelace card that displays your Steam friends list using a **single sensor**. Built for performance and simplicity.
 
 ## ✨ Features
