@@ -2,7 +2,7 @@
  * Steam Friends Card for Home Assistant
  * Ultra-optimized with whitelist filtering
  * Now fully reactive to HA themes!
- * Version 1.4.0
+ * Version 1.4.1
  */
 
 const C = {
