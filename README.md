@@ -17,7 +17,7 @@ A fast custom Lovelace card that displays your Steam friends list using a **sing
 
 ## 🎨 **Theme Integration**
 
-The card automatically uses your Home Assistant theme's:
+The card automatically uses your Home Assistant themes:
 
 | Element | Theme Variable | Fallback |
 |---------|----------------|----------|
@@ -54,11 +54,9 @@ Category: **"Lovelace"**
 1. Download `steam-friends-card.js` from the latest release
 2. Place it in your `/config/www/` directory
 3. Add to your Lovelace resources:
-```yaml
-resources:
   - url: /local/steam-friends-card.js
     type: module
-```markdown
+
 
 ## ⚙️ Configuration
 
@@ -68,14 +66,13 @@ You need the [Steam Friends Integration](https://github.com/mmynonetheless/ha-st
 
 ### Basic Configuration
 
-```
+
 type: custom:steam-friends-card
 entity: sensor.steam_friends
-```
+
 
 ### Full Configuration Example
 
-```
 type: custom:steam-friends-card
 entity: sensor.steam_friends
 title: "My Gaming Squad"
@@ -93,21 +90,6 @@ include_friends:
 exclude_friends:
   - "Spammer"
   - "76561197960642784"
-```
-
-## Configuration Options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| entity | string | Required | Your sensor.steam_friends entity |
-| title | string | "Steam Friends" | Card title |
-| group_by_status | boolean | true | Group friends by Playing/Online/Offline |
-| compact_mode | boolean | true | Show in two columns |
-| online_only | boolean | false | Hide offline friends |
-| show_last_seen | boolean | true | Show last online time for offline friends |
-| custom_names | object | {} | Map Steam IDs to custom names |
-| include_friends | list | [] | WHITELIST - ONLY show these friends |
-| exclude_friends | list | [] | BLACKLIST - Remove specific friends |
 
 ## Filtering System
 
@@ -115,19 +97,19 @@ exclude_friends:
 
 When you specify include_friends, it acts as a strict whitelist. ONLY friends matching these criteria will be shown - everyone else is automatically hidden.
 
-```
+
 # This will show ONLY these three friends
 include_friends:
   - "76561197960287930"           # By Steam ID
   - "John"                         # By name (case-insensitive)
   - "Gaming Buddy"                  # By custom name (if set)
-```
+
 
 ### exclude_friends - The Blacklist
 
 The blacklist removes specific friends from the whitelist results. Useful for fine-tuning.
 
-```
+
 include_friends:
   - "76561197960287930"
   - "76561197960497428"
@@ -136,7 +118,7 @@ include_friends:
 exclude_friends:
   - "76561197960497428"            # Remove this specific friend
   - "Annoying Person"                # Remove anyone with this in their name
-```
+
 
 ### Filter Priority
 
@@ -156,16 +138,16 @@ exclude_friends:
 ## Example Configurations
 
 ### Simple Online-Only View
-```
+
 type: custom:steam-friends-card
 entity: sensor.steam_friends
 title: "Who's Online?"
 online_only: true
 compact_mode: true
-```
+
 
 ### Full Featured with Custom Names
-```
+
 type: custom:steam-friends-card
 entity: sensor.steam_friends
 title: "Gaming Squad"
@@ -179,10 +161,10 @@ include_friends:
   - "GamerDad"
   - "NoobSlayer"
   - "76561197960642784"
-```
+
 
 ### Family & Close Friends
-```
+
 type: custom:steam-friends-card
 entity: sensor.steam_friends
 title: "Family & Close Friends"
